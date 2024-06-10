@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Setup Machine Learning Model</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-6">
+                <h3>Upload CSV Data File</h3>
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <input type="file" class="form-control-file" id="datafile" name="datafile" required>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="uploadButton">Upload</button>
+                </form>
+                <div id="uploadStatus"></div>
+            </div>
+            <div class="col-md-6">
+                <h3>Configure Perceptron Model</h3>
+                <form action="/configure_model" method="post">
+                    <div class="form-group">
+                        <label for="input_neurons">Input Neurons</label>
+                        <input type="number" class="form-control" id="input_neurons" name="input_neurons" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="hidden_layers">Hidden Layers</label>
+                        <input type="number" class="form-control" id="hidden_layers" name="hidden_layers" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="neurons_per_layer">Neurons per Hidden Layer</label>
+                        <input type="number" class="form-control" id="neurons_per_layer" name="neurons_per_layer" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Start Training</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            $('#uploadButton').click(function(){
+                var formData = new FormData($('#uploadForm')[0]);
+                $.ajax({
+                    url: '/upload',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(response){
+                        $('#uploadStatus').html('<div class="alert alert-success">' + response.message + '</div>');
+                    },
+                    error: function(response){
+                        $('#uploadStatus').html('<div class="alert alert-danger">' + response.message + '</div>');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

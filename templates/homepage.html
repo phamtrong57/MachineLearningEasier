@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homepage</title>
+    <!-- Bootstrap JS and dependencies -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+   
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet">
+
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row header py-2">
+        <div class="col-12 d-flex justify-content-end">
+            <button class="btn btn-outline-primary mx-1 active">Home</button>
+            <button class="btn btn-outline-primary mx-1">Review</button>
+        </div>
+    </div>
+    <div class="row no-gutters m-2">
+        <div class="col-3 sidebar-left d-flex flex-column p-2">
+            <div class="section model-selection">
+                <div class="form-group">
+                    <label for="modelSelect">Model Selection</label>
+                    <select class="form-control" id="modelSelect">
+                        <option>Perceptron</option>
+                        <option>ARIMA</option>
+                        <option>Others</option>
+                    </select>
+                </div>
+            </div>
+            <div class="section data-selection p-2">
+                <div class="form-group">
+                    <label for="fileUploadLabel">Train Data Selection</label>
+                    <form id="upload-file" method="post" enctype="multipart/form-data">
+                        <fieldset>
+                            <input name="file" type="file">
+                        </fieldset>
+                        <fieldset>
+                            <button class="btn btn-primary btn-block btn-padded mt-2" id="upload-file-btn" type="button">Upload</button>
+                        </fieldset>
+                    </form>
+                    <div id="uploadMessage" class="mt-2"></div>
+                </div>
+                <div class ="data-information">
+                    <div id="file-info" class="file-info"></div>
+                </div>
+            </div>
+            <div class="section data-selection p-2">
+                <div class="form-group">
+                    <label for="fileUploadLabel">Label Data Selection</label>
+                    <form id="upload-file1" method="post" enctype="multipart/form-data">
+                        <fieldset>
+                            <input name="file" type="file">
+                        </fieldset>
+                        <fieldset>
+                            <button class="btn btn-primary btn-block btn-padded mt-2" id="upload-file-btn1" type="button">Upload</button>
+                        </fieldset>
+                    </form>
+                    <div id="uploadMessage1" class="mt-2"></div>
+                </div>
+                <div class ="data-information">
+                    <div id="file-info1" class="file-info"></div>
+                </div>
+            </div>
+            <div class="section start-training p-2">
+            <div id ="startMessage"></div>
+                <button class="btn btn-dark btn-block btn-padded mt-2" id="start-training-btn">Start Training</button>
+                <button class="btn btn-danger btn-block btn-padded mt-2" id="stop-training-btn" disabled>Stop</button>
+            </div>
+        </div>
+        <div class="col-9 main-content d-flex flex-column p-2">
+            <div class="top-content">
+                <div id="plot" class="plot"></div>
+            </div>
+            <div class="bottom-content d-flex">
+                <div id="validation_plot"></div>
+            </div>
+        </div>
+        <!-- <div class="col-3 sidebar-right d-flex flex-column align-items-center">
+            <div class="large-section col-12"></div>
+            <div class="small-section col-12"></div>
+        </div> -->
+    </div>
+</div>
+<script>
+let model_setup = {};
+var socket = io();
+$(function() {
+    $('#upload-file-btn').click(function() {
+        // var form_data = new FormData($('#upload-file')[0]);
+        var file_name_id ='#upload-file' 
+        var target_id = "#file-info"
+        var form_data = new FormData($(file_name_id)[0]);
+        var uploadMessageID ='#uploadMessage' 
+        var data_type = 'train_data'
+        uploadForm(uploadMessageID,form_data,target_id,file_name_id,data_type); 
+    });
+});
+$(function() {
+    $('#upload-file-btn1').click(function() {
+        var file_name_id ='#upload-file1' 
+        var target_id = "#file-info1"
+        var form_data = new FormData($(file_name_id)[0]);
+        var uploadMessageID ='#uploadMessage1' 
+        var data_type = 'train_label'
+        uploadForm(uploadMessageID,form_data,target_id,file_name_id,data_type); 
+
+    });
+});
+function uploadForm(uploadMessageID,form_data,target_id,file_name_id,data_type){
+    $.ajax({
+            type: 'POST',
+            url: '/uploadData',
+            data: form_data,
+            contentType: false,
+            cache: false,
+            processData: false,
+            success: function(response) {
+                        $(uploadMessageID).text(response.message).css('color', 'green');
+                        updateFileInfo(response.file_info,target_id);
+                        model_setup[data_type] = response.file_info.name
+            },
+            error: function(response) {
+                $(uploadMessageID).text(response.responseJSON.message).css('color', 'red');
+            }
+        });
+}
+function updateFileInfo(file_info,target_id) {
+    var fileInfo = `
+        <p><strong>Name:</strong> ${file_info.name}</p>
+        <p><strong>Row:</strong> ${file_info.rows}</p>
+        <p><strong>Column:</strong> ${file_info.columns}</p>
+    `;
+    $(target_id).html(fileInfo);
+}
+
+$(function() {
+    $('#start-training-btn').click(function() {
+        var selectedValue = $('#modelSelect').val();
+        model_setup["model"] = selectedValue
+        console.log(model_setup)
+        if('train_data' in model_setup && 'train_label' in model_setup){
+            console.log("POST was created");
+            // Disable the start button and enable the stop button
+            $(this).prop('disabled', true);
+            $('#stop-training-btn').prop('disabled', false);
+            // Add any additional logic for the start action here
+            
+            var data = {
+                key1: 'value1',
+                key2: 'value2'
+            };
+
+            // Make an AJAX POST request to the server
+            $.ajax({
+                url: '/start_training',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(response) {
+                    console.log('Request successful');
+                    // Handle the response from the server if needed
+                    console.log(response);
+                },
+                error: function(xhr, status, error) {
+                    console.log('Request failed with status:', status);
+                }
+            });
+
+        }else{
+            return;
+        }
+    });
+});
+$(function(){
+    $('#stop-training-btn').click(function() {
+        // Disable the stop button and enable the start button
+        $(this).prop('disabled', true);
+        $('#start-training-btn').prop('disabled', false);
+        // Add any additional logic for the stop action here
+
+
+        var data = {
+                key1: 'value1',
+                key2: 'value2'
+            };
+
+            // Make an AJAX POST request to the server
+            $.ajax({
+                url: '/stop_training',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(response) {
+                    console.log('Request successful');
+                    // Handle the response from the server if needed
+                    console.log(response);
+                },
+                error: function(xhr, status, error) {
+                    console.log('Request failed with status:', status);
+                }
+            });
+    });
+});
+
+
+// Socket
+socket.on('connect',function(){
+    socket.emit('my event', {data: 'I am connected'})
+})
+
+// socket.on('training_loss',function(json){
+//     console.log('called');
+//     console.log(json);
+// })
+
+var epochs = [];
+var losses = [];
+
+var layout = {
+    title: 'Training Loss Plot',
+    xaxis: {
+        title: 'Epoch',
+        range: [0, 2000] // Set the initial range for x-axis
+        },
+    yaxis: {
+        title: 'Loss'
+    }
+};
+
+var config = {
+    responsive: true
+};
+
+var trace = {
+    x: epochs,
+    y: losses,
+    mode: 'lines',
+    type: 'scatter'
+};
+
+var data = [trace];
+
+Plotly.newPlot('plot', data, layout, config);
+
+socket.on('training_loss', function(data) {
+    console.log(data)
+    epochs.push(data.Epoch);
+    losses.push(data.loss);
+    Plotly.restyle('plot', 'x', [epochs]);
+    Plotly.restyle('plot', 'y', [losses]);
+});
+
+
+
+</script>
+</body>
+</html>

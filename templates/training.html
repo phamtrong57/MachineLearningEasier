@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Training</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h3>Training Page</h3>
+        <button class="btn btn-success" id="startTraining">Start Training</button>
+        <div id="trainingStatus" class="mt-4"></div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+    <script>
+        $(document).ready(function(){
+            var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+            $('#startTraining').click(function(){
+                $.post('/start_training');
+            });
+
+            socket.on('update_loss', function(data){
+                $('#trainingStatus').append('<p>Epoch ' + data.epoch + ': Loss = ' + data.loss.toFixed(4) + '</p>');
+            });
+        });
+    </script>
+</body>
+</html>

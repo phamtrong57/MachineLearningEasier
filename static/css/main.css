@@ -1,0 +1,69 @@
+.header {
+    background-color: #f8f8f8;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add box shadow */
+}
+
+.sidebar-left {
+    /* background-color: #d0e0f0; */
+    height: 90vh;
+}
+
+.sidebar-left .section {
+    border: 1px solid #000;
+}
+
+.file-info{
+    border: none;
+}
+.sidebar-left label{
+    font-weight: bold;
+}
+
+.model-selection {
+    height: 13.33%;
+    padding: 10px;
+}
+
+.model-selection .form-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+
+.data-selection {
+    padding: 10px;
+    border: none;
+}
+
+.data-selection button {
+    padding: 10px;
+}
+
+.top-content {
+    height: 90%;
+    border: 1px solid #000;
+}
+
+.plot {
+    font-family: Arial, sans-serif;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/* .plot .plot-title {
+    font-family: Arial, sans-serif;
+    font-size: 20px;
+    font-weight: bold;
+} */
+
+.bottom-content {
+    height: 50%;
+    border: 1px solid #000;
+}
+
+.bottom-content .content-box {
+    border: 1px solid #000;
+    height: 100%;
+}
+
